@@ -24,6 +24,7 @@ class Example(mglw.WindowConfig):
     window_size = (1280, 720)
     aspect_ratio = 16 / 9
     resizable = True
+    samples = 8
 
 
 class Camera:
