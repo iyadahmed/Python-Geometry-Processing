@@ -49,7 +49,6 @@ def iter_binary_stl_mesh_triangles(filepath: Path | str):
         file.seek(80, os.SEEK_CUR)  # Skip header
 
         num_tris = read_uint32(file)
-        print(num_tris)
 
         for _ in range(num_tris):
             file.seek(4 * 3, os.SEEK_CUR)  # Skip normal vector
