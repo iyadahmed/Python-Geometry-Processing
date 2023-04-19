@@ -139,7 +139,7 @@ class PerspectiveProjection(Example):
         self.mvp = self.prog["Mvp"]
         # self.vbo = self.ctx.buffer(grid(15, 10).astype('f4'))
         self.vbo = self.ctx.buffer(vertices.astype("f4"))
-        self.vao = self.ctx.simple_vertex_array(self.prog, self.vbo, "in_vert")  # type: ignore
+        self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f", "in_vert")])
 
         self.states = {
             self.wnd.keys.W: False,
