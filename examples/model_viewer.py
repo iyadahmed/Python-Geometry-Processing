@@ -1,13 +1,21 @@
 # Adpated from https://github.com/moderngl/moderngl/blob/master/examples/simple_camera.py
 
 
+from pathlib import Path
 import numpy as np
 from pyrr import Matrix44, Quaternion, Vector3, vector
 
 import moderngl
 import moderngl_window as mglw
 
+import site
+
+site.addsitedir(Path(__file__).parent.parent.as_posix())
+
+
 from geoproc.mesh_loader import iter_binary_stl_mesh_triangles
+
+STL_MESH_FILEPATH = Path(__file__).parent.parent / "tests/suzanne.stl"
 
 
 class Example(mglw.WindowConfig):
@@ -125,13 +133,13 @@ class PerspectiveProjection(Example):
             """,
         )
 
-        vertices = np.array([[[*vpos] for vpos in tri] for tri in iter_binary_stl_mesh_triangles("./suzanne.stl")])
+        vertices = np.array([[[*vpos] for vpos in tri] for tri in iter_binary_stl_mesh_triangles(STL_MESH_FILEPATH)])
 
         self.camera = Camera(self.aspect_ratio)
         self.mvp = self.prog["Mvp"]
         # self.vbo = self.ctx.buffer(grid(15, 10).astype('f4'))
         self.vbo = self.ctx.buffer(vertices.astype("f4"))
-        self.vao = self.ctx.simple_vertex_array(self.prog, self.vbo, "in_vert")
+        self.vao = self.ctx.simple_vertex_array(self.prog, self.vbo, "in_vert")  # type: ignore
 
         self.states = {
             self.wnd.keys.W: False,
@@ -189,10 +197,10 @@ class PerspectiveProjection(Example):
         self.move_camera()
 
         self.ctx.clear(1.0, 1.0, 1.0)
-        self.ctx.enable(moderngl.DEPTH_TEST)
+        self.ctx.enable(moderngl.DEPTH_TEST)  # type: ignore
 
-        self.mvp.write((self.camera.mat_projection * self.camera.mat_lookat).astype("f4"))
-        self.vao.render(moderngl.TRIANGLES)
+        self.mvp.write((self.camera.mat_projection * self.camera.mat_lookat).astype("f4"))  # type: ignore
+        self.vao.render(moderngl.TRIANGLES)  # type: ignore
 
 
 if __name__ == "__main__":
