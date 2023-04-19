@@ -92,10 +92,3 @@ class BinarySTLMeshWriter:
         write_zeros(self._file, 2)  # Write "attribute byte count"
 
         self._num_tris += 1
-
-
-if __name__ == "__main__":
-    with BinarySTLMeshWriter("test.stl") as writer:
-        for tri in iter_binary_stl_mesh_triangles("../groot.stl"):
-            vertices = tuple(tuple(value for value in vertex) for vertex in tri)
-            writer.write_triangle(vertices)
