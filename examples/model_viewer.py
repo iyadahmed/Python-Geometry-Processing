@@ -20,7 +20,7 @@ STL_MESH_FILEPATH = Path(__file__).parent.parent / "tests/suzanne.stl"
 
 class Example(mglw.WindowConfig):
     gl_version = (3, 3)
-    title = "ModernGL Example"
+    title = "Python Geometry Processing"
     window_size = (1280, 720)
     aspect_ratio = 16 / 9
     resizable = True
