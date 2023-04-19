@@ -137,7 +137,6 @@ class PerspectiveProjection(Example):
 
         self.camera = Camera(self.aspect_ratio)
         self.mvp = self.prog["Mvp"]
-        # self.vbo = self.ctx.buffer(grid(15, 10).astype('f4'))
         self.vbo = self.ctx.buffer(vertices.astype("f4"))
         self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f", "in_vert")])
 
