@@ -1,9 +1,7 @@
-from typing import BinaryIO
+from typing import BinaryIO, Tuple
 from pathlib import Path
 from struct import Struct
 import os
-
-import numpy as np
 
 
 FLOAT32_STRUCT = Struct("<f")
@@ -30,7 +28,7 @@ def write_uint32(file: BinaryIO, value: int):
     write_bytes(file, data)
 
 
-def read_float32(file: BinaryIO):
+def read_float32(file: BinaryIO) -> float:
     return FLOAT32_STRUCT.unpack(read_bytes(file, 4))[0]
 
 
@@ -46,34 +44,59 @@ def write_zeros(file: BinaryIO, n: int):
     write_bytes(file, b"0" * n)
 
 
-def read_stl_mesh(filepath: Path | str):
+def iter_binary_stl_mesh_triangles(filepath: Path | str):
     with open(filepath, "rb") as file:
         file.seek(80, os.SEEK_CUR)  # Skip header
 
         num_tris = read_uint32(file)
-        tris = np.empty((num_tris, 3, 3), dtype=np.float32)
+        print(num_tris)
 
-        for tri_index in range(num_tris):
+        for _ in range(num_tris):
             file.seek(4 * 3, os.SEEK_CUR)  # Skip normal vector
-            for i in range(3):
-                for j in range(3):
-                    tris[tri_index][i][j] = read_float32(file)
+            yield ((read_float32(file) for i in range(3)) for j in range(3))
             file.seek(2, os.SEEK_CUR)  # Skip "attribute byte count"
 
-        return tris
+
+class BinarySTLMeshWriter:
+    def __init__(self, filepath: Path | str):
+        self._num_tris = 0
+        self._file = open(filepath, "wb")
+
+        write_zeros(self._file, 80)  # Write header
+
+        # Write number of triangles, we should update it later
+        write_uint32(self._file, 0)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._file.seek(80, os.SEEK_SET)
+        write_uint32(self._file, self._num_tris)
+        self._file.close()
+
+    def write_triangle(
+        self,
+        vertices: Tuple[
+            Tuple[float, float, float],
+            Tuple[float, float, float],
+            Tuple[float, float, float],
+        ],
+    ):
+        write_zeros(self._file, 4 * 3)  # Write normal vector
+
+        # Write vertices
+        for vertex in vertices:
+            for value in vertex:
+                write_float32(self._file, value)
+
+        write_zeros(self._file, 2)  # Write "attribute byte count"
+
+        self._num_tris += 1
 
 
-def write_stl_mesh(filepath: Path | str, tris: np.ndarray):
-    with open(filepath, "wb") as file:
-        write_zeros(file, 80)  # Write header
-
-        num_tris = len(tris)
-        write_uint32(file, num_tris)
-
-        for tri_index in range(num_tris):
-            write_zeros(file, 4 * 3)  # Write normal vector
-            for i in range(3):
-                for j in range(3):
-                    write_float32(file, tris[tri_index][i][j])
-
-            write_zeros(file, 2)  # Write "attribute byte count"
+if __name__ == "__main__":
+    with BinarySTLMeshWriter("test.stl") as writer:
+        for tri in iter_binary_stl_mesh_triangles("../groot.stl"):
+            vertices = tuple(tuple(value for value in vertex) for vertex in tri)
+            writer.write_triangle(vertices)
