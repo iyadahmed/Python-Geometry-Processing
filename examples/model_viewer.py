@@ -118,28 +118,49 @@ class PerspectiveProjection(Example):
                 uniform mat4 model_view_projection;
 
                 in vec3 in_vert;
+                in vec3 normal;
+
+                out vec3 nout;
 
                 void main() {
                     gl_Position = model_view_projection * vec4(in_vert, 1.0);
+                    nout = normal;
                 }
             """,
             fragment_shader="""
                 #version 330
 
+                in vec3 nout;
                 out vec4 f_color;
 
                 void main() {
                     f_color = vec4(0.1, 0.1, 0.1, 1.0);
+                    f_color *= 10.0 * clamp(dot(nout, vec3(1.0, 1.0, 1.0)), 0.0, 1.0);
                 }
             """,
         )
 
-        vertices = np.array([[[*vpos] for vpos in tri] for tri in iter_binary_stl_mesh_triangles(STL_MESH_FILEPATH)])
+        verts = []
+        normals = []
+
+        for tri in iter_binary_stl_mesh_triangles(STL_MESH_FILEPATH):
+            tri_verts = [Vector3([*vpos]) for vpos in tri]
+            e0 = tri_verts[1] - tri_verts[0]
+            e1 = tri_verts[2] - tri_verts[0]
+            normal = e0.cross(e1).normalized
+
+            for v in tri_verts:
+                verts.append(v)
+                normals.append(normal)
+
+        verts_np = np.array(verts)
+        normals_np = np.array(normals)
 
         self.camera = Camera(self.aspect_ratio)
         self.model_view_projection_matrix_program_input = self.prog["model_view_projection"]
-        self.vbo = self.ctx.buffer(vertices.astype("f4"))
-        self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f", "in_vert")])
+        self.vbo = self.ctx.buffer(verts_np.astype("f4"))
+        self.normals = self.ctx.buffer(normals_np.astype("f4"))
+        self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f", "in_vert"), (self.normals, "3f", "normal")])
 
         self.states = {
             self.wnd.keys.W: False,
