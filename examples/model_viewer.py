@@ -114,12 +114,12 @@ class PerspectiveProjection(Example):
             vertex_shader="""
                 #version 330
 
-                uniform mat4 Mvp;
+                uniform mat4 model_view_projection;
 
                 in vec3 in_vert;
 
                 void main() {
-                    gl_Position = Mvp * vec4(in_vert, 1.0);
+                    gl_Position = model_view_projection * vec4(in_vert, 1.0);
                 }
             """,
             fragment_shader="""
@@ -136,7 +136,7 @@ class PerspectiveProjection(Example):
         vertices = np.array([[[*vpos] for vpos in tri] for tri in iter_binary_stl_mesh_triangles(STL_MESH_FILEPATH)])
 
         self.camera = Camera(self.aspect_ratio)
-        self.mvp = self.prog["Mvp"]
+        self.model_view_projection_matrix_program_input = self.prog["model_view_projection"]
         self.vbo = self.ctx.buffer(vertices.astype("f4"))
         self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f", "in_vert")])
 
@@ -198,7 +198,7 @@ class PerspectiveProjection(Example):
         self.ctx.clear(1.0, 1.0, 1.0)
         self.ctx.enable(moderngl.DEPTH_TEST)  # type: ignore
 
-        self.mvp.write((self.camera.mat_projection * self.camera.mat_lookat).astype("f4"))  # type: ignore
+        self.model_view_projection_matrix_program_input.write((self.camera.mat_projection * self.camera.mat_lookat).astype("f4"))  # type: ignore
         self.vao.render(moderngl.TRIANGLES)  # type: ignore
 
 
